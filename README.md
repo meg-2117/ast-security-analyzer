@@ -1,4 +1,4 @@
-# 🔐 AST-Based Security Analyzer with Taint Tracking
+﻿# 🔐 AST-Based Security Analyzer with Taint Tracking
 
 A Python-based Static Application Security Testing (SAST) tool that uses **Abstract Syntax Tree (AST) analysis** and **taint tracking** to identify potentially insecure coding practices and security vulnerabilities in Python programs.
 
@@ -433,15 +433,7 @@ The application is publicly deployed using **Streamlit Community Cloud**.
 
 The deployed application allows users to upload Python files, run security analysis, view findings, and download reports without installing the project locally.
 
-## 14. Demo Video
-
-A demonstration video is optional for this submission.
-
-If provided, it can be added here:
-
-`[Add demo video link when available]`
-
-## 15. Credits and References
+## 14. Credits and References
 
 1. Python Documentation – Abstract Syntax Trees: https://docs.python.org/3/library/ast.html
 2. Streamlit Documentation: https://docs.streamlit.io/
@@ -459,3 +451,4 @@ If provided, it can be added here:
 
 **Developed by:**  
 ANIMALLA MAHATHI DEVI | BIDDIKA MEGHANA | UVVA VENNELA
+
