@@ -1,11 +1,19 @@
-# AST-Based Security Analyzer with Taint Tracking
+# 🔐 AST-Based Security Analyzer with Taint Tracking
 
-A Python-based Static Application Security Testing (SAST) prototype that uses Abstract Syntax Tree (AST) analysis and taint tracking to identify potentially insecure coding practices in Python programs.
+A Python-based Static Application Security Testing (SAST) tool that uses **Abstract Syntax Tree (AST) analysis** and **taint tracking** to identify potentially insecure coding practices and security vulnerabilities in Python programs.
 
-## Team Members
+## 🚀 Live Demo
+
+**Try the deployed application here:**
+
+🔗 **[AST-Based Security Analyzer – Live Application](https://ast-security-analyzer.streamlit.app/)**
+
+The application is deployed using Streamlit Community Cloud. Users can upload Python source files, analyze them for potential security vulnerabilities, and download the analysis reports in JSON and SARIF formats.
+
+## 👥 Team Members
 
 | S. No. | Name | Roll Number |
-|---|---|---|
+|:---:|---|:---:|
 | 1 | ANIMALLA MAHATHI DEVI | 24VV1A0505 |
 | 2 | BIDDIKA MEGHANA | 24VV1A0509 |
 | 3 | UVVA VENNELA | 25VV5A0573 |
@@ -17,271 +25,441 @@ A Python-based Static Application Security Testing (SAST) prototype that uses Ab
 
 ## 1. Problem Statement
 
-The objective of this project is to develop a static security analyzer for Python programs that detects potentially dangerous coding patterns without executing the source code.
+Develop a Static Application Security Testing (SAST) tool for Python or JavaScript that detects common security vulnerabilities using Abstract Syntax Tree analysis and taint tracking.
 
-The analyzer uses Python's Abstract Syntax Tree (AST) to inspect source code and performs basic intraprocedural taint analysis to trace untrusted input to sensitive operations.
+The tool should identify dangerous coding practices, trace potentially untrusted data from sources to sensitive operations, and generate structured vulnerability reports.
 
-The tool generates security findings containing rule information, severity, CWE references, source line numbers and, where applicable, taint paths. It also supports SARIF 2.1.0 output for integration with code-scanning workflows.
+The analyzer should support configurable security rules and provide reports containing vulnerability identifiers, severity levels, affected line numbers, and relevant descriptions.
 
 ## 2. Background Theory
 
-### Abstract Syntax Tree (AST)
+### 2.1 Static Application Security Testing (SAST)
 
-An Abstract Syntax Tree is a tree representation of source code in which programming constructs such as functions, expressions, assignments and statements are represented as nodes.
+Static Application Security Testing analyzes source code without executing the program. It helps identify security weaknesses during development.
 
-Python provides the built-in `ast` module to parse source code into an AST. This allows the analyzer to inspect program structure without executing it.
+### 2.2 Abstract Syntax Tree (AST)
 
-### Static Application Security Testing (SAST)
+An Abstract Syntax Tree is a tree representation of source code that describes its syntactic structure.
 
-SAST analyzes source code to identify potential security weaknesses before a program is executed or deployed.
+Python provides the built-in `ast` module to parse source code into an AST. The analyzer traverses this structure to identify potentially dangerous function calls and coding patterns.
 
-### Taint Analysis
+### 2.3 Taint Analysis
 
-Taint analysis tracks untrusted data from its source to potentially dangerous operations called sinks.
+Taint analysis tracks data that originates from untrusted sources and determines whether it reaches sensitive operations without appropriate sanitization.
 
-- **Source:** Where untrusted data enters a program.
-- **Tainted variable:** A variable containing untrusted data.
-- **Sanitizer:** An operation intended to validate or clean untrusted data.
-- **Sink:** A sensitive operation that should not receive unsafe input.
+The analyzer uses:
 
-### Worked Example
+- **Sources:** Functions that introduce potentially untrusted data, such as `input()`.
+- **Sanitizers:** Operations that are intended to make data safe.
+- **Sinks:** Sensitive operations that may be vulnerable when they receive untrusted data, such as SQL queries and OS command execution.
+
+### 2.4 Worked Example
+
+Consider the following Python code:
 
 ```python
-value = input()
-cursor.execute(value)
+user_input = input("Enter expression: ")
+result = eval(user_input)
 ```
 
-1. `input()` is identified as an untrusted source.
-2. The returned value is assigned to `value`.
-3. The analyzer tracks the tainted value.
-4. `cursor.execute()` is treated as a sensitive sink.
-5. A possible unsafe data flow is reported.
+**Analysis:**
+
+1. `input()` receives data from an untrusted user.
+2. The returned value is assigned to `user_input`.
+3. The value is passed to `eval()`.
+4. The analyzer identifies the dangerous operation.
+5. A security finding is generated with its rule identifier, severity, and line number.
+
+This demonstrates how AST-based pattern detection and taint tracking can help identify potentially unsafe code.
 
 ## 3. Features
 
-- AST-based Python source-code analysis.
-- Detection of potentially dangerous `eval()` and `exec()` calls.
-- Detection of shell commands using `shell=True`.
-- Heuristic detection of possible hard-coded secrets.
-- Detection of weak hashing algorithms such as MD5 and SHA-1.
-- Detection of insecure deserialization using `pickle.loads()`.
-- Basic intraprocedural taint tracking.
-- YAML-based security rule definitions.
-- Text, JSON and SARIF report generation.
-- Separate vulnerable and safe test fixtures.
-- Automated testing using pytest.
+- **AST-Based Analysis:** Parses Python source code using the built-in AST module.
+- **Dangerous Function Detection:** Identifies potentially unsafe uses of `eval()` and `exec()`.
+- **Shell Command Detection:** Detects command execution patterns involving `shell=True`.
+- **Hard-Coded Secret Detection:** Identifies potentially hard-coded credentials and secrets.
+- **Weak Hash Detection:** Identifies the use of weak hashing algorithms such as MD5 and SHA-1.
+- **Insecure Deserialization Detection:** Identifies potentially unsafe uses of `pickle.loads()`.
+- **Taint Tracking:** Tracks untrusted data from sources to sensitive operations.
+- **YAML-Based Security Rules:** Loads configurable security rules from a YAML file.
+- **Interactive Web Interface:** Provides a Streamlit-based interface for uploading and analyzing Python files.
+- **JSON Reports:** Generates downloadable JSON vulnerability reports.
+- **SARIF Reports:** Generates reports in Static Analysis Results Interchange Format (SARIF) 2.1.0.
+- **Command-Line Interface:** Supports analysis through the terminal.
 
-## 4. Architecture
+## 4. System Architecture
+
+The analyzer follows a modular architecture.
+
+### 4.1 Architecture Flow
 
 ```text
-          Python Source Code
-                  |
-                  v
-              AST Parser
-                  |
-          +-------+-------+
-          |               |
-          v               v
-     Pattern-Based     Taint Analysis
-       Detection
-          |               |
-          +-------+-------+
-                  |
-                  v
-          Security Findings
-                  |
-                  v
-           Report Generator
-                  |
-          +-------+-------+
-          |       |       |
-          v       v       v
-         Text    JSON    SARIF
+       Python Source Code
+               |
+               v
+       Input / File Upload
+               |
+               v
+          AST Parser
+               |
+               v
+       AST Representation
+               |
+          +----+----+
+          |         |
+          v         v
+    Pattern-Based  Taint
+     Detection    Analysis
+          |         |
+          +----+----+
+               |
+               v
+       Security Findings
+               |
+               v
+        Report Generator
+               |
+          +----+----+
+          |         |
+          v         v
+       JSON       SARIF
+       Report     Report
 ```
 
-### Main Modules
+### 4.2 Main Modules
 
-| File | Responsibility |
+| Module | Description |
 |---|---|
-| `main.py` | Command-line interface and scan execution |
-| `ast_parser.py` | Parses Python source code into an AST |
-| `security_rules.py` | Loads security rules from YAML |
-| `vulnerability_detector.py` | Detects insecure coding patterns |
-| `taint_analyzer.py` | Performs basic intraprocedural taint tracking |
-| `report_generator.py` | Generates text, JSON and SARIF reports |
+| `app.py` | Provides the Streamlit web interface. |
+| `main.py` | Provides command-line execution of the analyzer. |
+| `ast_parser.py` | Parses Python source files into AST structures. |
+| `security_rules.py` | Loads configurable security rules from YAML. |
+| `vulnerability_detector.py` | Detects potentially insecure coding patterns. |
+| `taint_analyzer.py` | Performs intraprocedural taint analysis. |
+| `report_generator.py` | Generates JSON and SARIF reports. |
+| `rules/security_rules.yaml` | Contains configurable security rules. |
+| `tests/test_analyzer.py` | Contains automated test cases. |
 
-### Data Structures
+### 4.3 Data Structures
 
-- Python AST nodes represent program structure.
-- Dictionaries and sets are used to maintain analysis information.
-- YAML configuration stores security rule definitions.
-- Finding records store detected security issues and their details.
+The project uses the following data structures:
 
-## 5. Installation
+- **AST Nodes:** Represent functions, expressions, assignments, and other Python language constructs.
+- **Dictionaries:** Store vulnerability information such as rule IDs, messages, severity, file names, and line numbers.
+- **Lists:** Store security findings and report results.
+- **Sets:** Support tracking of tainted variables.
+- **YAML Configuration:** Stores security rule definitions separately from the detection logic.
 
-### Prerequisites
+## 5. Technologies Used
 
-- Python 3.10 or later
+| Technology | Purpose |
+|---|---|
+| Python | Core implementation |
+| Python AST | Source code parsing |
+| Streamlit | Interactive web interface |
+| PyYAML | YAML security rule configuration |
+| Pytest | Automated testing |
+| Coverage.py | Code coverage measurement |
+| JSON | Structured vulnerability reports |
+| SARIF 2.1.0 | Standardized static analysis reports |
+| Git and GitHub | Version control and project hosting |
+| Streamlit Community Cloud | Application deployment |
+
+## 6. Project Structure
+
+```text
+ast-security-analyzer/
+│
+├── app.py
+├── main.py
+├── ast_parser.py
+├── security_rules.py
+├── taint_analyzer.py
+├── vulnerability_detector.py
+├── report_generator.py
+│
+├── requirements.txt
+├── README.md
+│
+├── rules/
+│   └── security_rules.yaml
+│
+├── examples/
+│   ├── safe.py
+│   └── vulnerable.py
+│
+├── tests/
+│   ├── test_analyzer.py
+│   ├── vulnerable/
+│   │   ├── vuln_01.py
+│   │   ├── ...
+│   │   └── vuln_20.py
+│   │
+│   └── safe/
+│       ├── safe_01.py
+│       ├── ...
+│       └── safe_20.py
+│
+├── docs/
+│   ├── architecture/
+│   │   └── architecture.md
+│   └── screenshots/
+│
+└── reports/
+```
+
+## 7. Installation and Setup
+
+### 7.1 Prerequisites
+
+- Python 3.10 or above
+- pip package manager
 - Git
 - Visual Studio Code (recommended)
 
-### Clone the Repository
+### 7.2 Clone the Repository
 
 ```bash
 git clone https://github.com/meg-2117/ast-security-analyzer.git
+```
+
+Navigate to the project directory:
+
+```bash
 cd ast-security-analyzer
 ```
 
-### Create a Virtual Environment
-
-**Windows PowerShell:**
-
-```powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-**macOS/Linux:**
+### 7.3 Install Dependencies
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### Install Dependencies
+### 7.4 Run the Web Application
 
 ```bash
-python -m pip install -r requirements.txt
+streamlit run app.py
 ```
 
-## 6. Usage
+The application will open in your browser. If it does not open automatically, visit:
 
-### Scan a Single Python File
+```text
+http://localhost:8501
+```
+
+## 8. Usage
+
+### 8.1 Web Application
+
+1. Open the deployed application or run it locally.
+2. Click the Upload button.
+3. Select a Python source file (`.py`).
+4. Review the uploaded source code.
+5. Click **Analyze Code**.
+6. Review the security findings.
+7. Download the JSON or SARIF report.
+
+**Live Application:** https://ast-security-analyzer.streamlit.app/
+
+### 8.2 Command-Line Usage
+
+To analyze a Python file:
 
 ```bash
 python main.py examples/vulnerable.py
 ```
 
-### Scan a Directory
+To generate a JSON report:
 
 ```bash
-python main.py examples
+python main.py examples/vulnerable.py --format json --output reports/report.json
 ```
 
-### Generate a JSON Report
+To generate a SARIF report:
 
 ```bash
-python main.py examples --format json --output reports/results.json
+python main.py examples/vulnerable.py --format sarif --output reports/report.sarif
 ```
 
-### Generate a SARIF Report
+To analyze a directory of vulnerable test files:
 
 ```bash
-python main.py examples --format sarif --output reports/results.sarif
+python main.py tests/vulnerable --format json --output vulnerable_report.json
 ```
 
-The generated reports contain information about detected security issues.
+To analyze safe test files:
 
-## 7. Examples and Results
+```bash
+python main.py tests/safe --format json --output safe_report.json
+```
 
-The project includes sample vulnerable and safe Python programs.
+## 9. Screenshots and Results
 
-- `examples/vulnerable.py` demonstrates potentially insecure coding patterns.
-- `examples/safe.py` demonstrates safer coding examples.
+The following screenshots demonstrate the application interface and its analysis results.
 
-### Test Fixture Results
+### 9.1 Application Home Page
 
-The analyzer was evaluated using 20 vulnerable and 20 safe fixture files.
+The home page provides the Python source file upload interface.
 
-| Metric | Result |
+![Application Home Page](docs/screenshots/home-page.png)
+
+### 9.2 Vulnerable Code Detection
+
+Example input:
+
+```python
+x = input()
+eval(x)
+```
+
+The analyzer identifies the potentially unsafe `eval()` operation and displays a high-severity finding.
+
+![Vulnerable Code Analysis](docs/screenshots/vulnerable-result.png)
+
+### 9.3 Safe Code Analysis
+
+Example input:
+
+```python
+x = 10
+print(x)
+```
+
+The analyzer reports that no security issues were detected in this example.
+
+![Safe Code Analysis](docs/screenshots/safe-result.png)
+
+**Note:** Add the corresponding actual screenshots to `docs/screenshots/` using the filenames shown above.
+
+## 10. Testing and Evaluation
+
+The analyzer was evaluated using separate vulnerable and safe Python test fixtures.
+
+### 10.1 Test Dataset
+
+| Test Category | Number of Files |
 |---|---:|
-| True Positives (TP) | 20 |
-| False Positives (FP) | 0 |
-| True Negatives (TN) | 20 |
-| False Negatives (FN) | 0 |
+| Vulnerable Python files | 20 |
+| Safe Python files | 20 |
+| Total test files | 40 |
 
-These results describe the project's prepared test fixtures only. They should not be interpreted as real-world detection accuracy.
+### 10.2 Automated Testing
 
-### Report Formats
+The project uses Pytest for automated testing.
 
-- **Text:** Human-readable findings.
-- **JSON:** Structured security findings.
-- **SARIF:** Standardized output for code-scanning integrations.
-
-## 8. Testing and Code Coverage
-
-The project uses pytest for automated testing.
-
-### Run Tests
+Run the test suite:
 
 ```bash
 python -m pytest -q
 ```
 
-### Run Coverage
+**Observed result:**
+
+```text
+40 passed
+```
+
+### 10.3 Code Coverage
+
+Coverage was measured using Coverage.py.
+
+Run:
 
 ```bash
 python -m coverage run -m pytest
 python -m coverage report -m
 ```
 
-### Generate HTML Coverage Report
+**Observed result:**
 
-```bash
-python -m coverage html
-```
+| Metric | Result |
+|---|---:|
+| Total statements | 353 |
+| Missed statements | 0 |
+| Statement coverage | 100% |
 
-Open the generated `htmlcov/index.html` file to view the coverage report.
+### 10.4 Fixture-Based Evaluation
 
-**Verified project results:**
-- 40 automated tests passed.
-- 100% statement coverage in the measured test run.
-- 20 vulnerable fixtures and 20 safe fixtures were tested.
+The following results were observed when scanning the prepared test fixtures:
 
-Statement coverage measures which statements were executed during testing. It does not guarantee detection of every possible vulnerability.
+| Metric | Result |
+|---|---:|
+| True Positives (TP) | 20 |
+| False Negatives (FN) | 0 |
+| True Negatives (TN) | 20 |
+| False Positives (FP) | 0 |
 
-## 9. Limitations and Future Enhancements
+These values describe the prepared fixture dataset only. They should not be interpreted as real-world detection accuracy or a guarantee that all vulnerabilities will be detected.
 
-### Current Limitations
+### 10.5 SARIF Validation
 
-- Taint analysis is limited to intraprocedural tracking.
-- Complex control flow, object attributes and aliases are not fully modeled.
-- Sanitizer recognition is name-based.
-- Hard-coded secret detection is heuristic and may produce false positives.
-- The analyzer does not guarantee detection of all security vulnerabilities.
+The generated SARIF report was checked for its JSON structure and key fields.
 
-### Future Enhancements
+Observed output:
 
-- Interprocedural taint analysis using a call graph.
-- More comprehensive source, sanitizer and sink definitions.
-- Improved detection accuracy and confidence scoring.
-- Comparison of results with Bandit.
-- Support for additional programming languages.
+- SARIF version: 2.1.0
+- Number of runs: 1
+- Number of results: 20
+- Tool name: AST Security Analyzer
 
-## 10. Screenshots and Demonstration
+## 11. Limitations
 
-Screenshots demonstrating the following operations will be added to `docs/screenshots/`:
+- The current implementation focuses on Python source code.
+- Taint analysis is intraprocedural and does not provide complete interprocedural tracking across function calls.
+- Static analysis may produce false positives and false negatives.
+- Detection depends on the implemented patterns and configured security rules.
+- The analyzer does not execute the uploaded Python program.
+- A clean result does not guarantee that the source code is completely secure.
+- The current implementation is an academic prototype and is not a replacement for comprehensive professional security auditing.
 
-1. Running the analyzer on vulnerable code.
-2. Running the analyzer on safe code.
-3. Generating JSON or SARIF security reports.
+## 12. Future Enhancements
 
-### Demo Video
+- Implement interprocedural taint analysis using call graphs.
+- Expand support for additional vulnerability patterns.
+- Improve sanitization and data-flow tracking.
+- Add support for JavaScript source code.
+- Improve false-positive and false-negative evaluation using larger datasets.
+- Integrate additional security analysis tools such as Bandit for comparative evaluation.
+- Improve SARIF compatibility and integration with GitHub code scanning.
+- Extend the web interface with additional filtering and visualization features.
 
-A 3–5 minute demonstration video will be added here after recording.
+## 13. Deployment
 
-**Demo Video Link:** To be added.
+The application is publicly deployed using **Streamlit Community Cloud**.
 
-## 11. Credits and References
+**Deployment URL:**
 
-- Python AST Documentation: https://docs.python.org/3/library/ast.html
-- SARIF 2.1.0 Specification: https://docs.oasis-open.org/sarif/sarif/v2.1.0/
-- PyYAML Documentation: https://pyyaml.org/wiki/PyYAMLDocumentation
-- Pytest Documentation: https://docs.pytest.org/
+🔗 https://ast-security-analyzer.streamlit.app/
 
-**AI Assistance:** ChatGPT was used for planning, drafting and debugging assistance. The team reviewed and tested the implementation.
+**GitHub Repository:**
+
+🔗 https://github.com/meg-2117/ast-security-analyzer
+
+The deployed application allows users to upload Python files, run security analysis, view findings, and download reports without installing the project locally.
+
+## 14. Demo Video
+
+A demonstration video is optional for this submission.
+
+If provided, it can be added here:
+
+`[Add demo video link when available]`
+
+## 15. Credits and References
+
+1. Python Documentation – Abstract Syntax Trees: https://docs.python.org/3/library/ast.html
+2. Streamlit Documentation: https://docs.streamlit.io/
+3. PyYAML Documentation: https://pyyaml.org/wiki/PyYAMLDocumentation
+4. Pytest Documentation: https://docs.pytest.org/
+5. SARIF Specification: https://sarifweb.azurewebsites.net/
+6. Common Weakness Enumeration (CWE): https://cwe.mitre.org/
+7. GitHub Documentation: https://docs.github.com/
 
 ---
 
-**Project:** AST-Based Security Analyzer with Taint Tracking  
-**Problem:** P15 – Compiler Design, 2026–27
+**Project:** P15 – AST-Based Security Analyzer with Taint Tracking  
+**Course:** Compiler Design, 2026–27  
+**Institution:** JNTU-GV College of Engineering Vizianagaram
+
+**Developed by:**  
+ANIMALLA MAHATHI DEVI | BIDDIKA MEGHANA | UVVA VENNELA
